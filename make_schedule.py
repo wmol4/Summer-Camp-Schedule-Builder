@@ -24,7 +24,7 @@ import numpy as np
 import pandas as pd
 
 
-df = pd.read_csv(r'https://docs.google.com/spreadsheets/d/1t1wbFuAwKkLUzYYWWHKpVWnrBxQJbfVOK3pmTdqRVc0/export?format=csv&gid=0', index_col = 0, header = 0)
+df = pd.read_csv(<URL HERE>, index_col = 0, header = 0)
 df = df.fillna('.') #fill in blanks with a period
 print(df)
 
