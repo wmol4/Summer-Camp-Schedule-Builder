@@ -4,29 +4,11 @@ Created on Wed Jun  7 17:19:31 2017
 
 @author: wluckow
 """
-#TODO
-#1) make it so that groups can go to certain locations more than once (i.e. big field)
-#2) make it so that if an activity is written into the loaded data, the location dict frequency count for that period is overwritten
-#3) export the final schedule back to the google spreadsheet
-#4) put waterworld back into the location dict as an outdoor activity
-#5) If an unknown location is put into the input spreadsheet, allow the user to specify if it is indoors or outdoors
-#6) Follow up on #5: Make sure that custom activities still adhere to the inout restriction (cannot be outside 2 periods in a row)
-#7) During 4th and 5th period, put more emphasis on using indoor spaces
-#8) Create something similar to inout, but basically ensure that each group is getting at least 3 "activity-based" locations every day
-
-
-#Much later
-#Add in a weekly activity counter so that groups aren't doing things like archery every day
-#
-
-
-import numpy as np
 import pandas as pd
 
 
 df = pd.read_csv(<URL HERE>, index_col = 0, header = 0)
 df = df.fillna('.') #fill in blanks with a period
-print(df)
 
 data = []
 
@@ -34,7 +16,8 @@ for tuples in df.itertuples(index = False):
     for value in tuples:
         data.append(value)
         
-#print(data)
+print(data)
+
 
 def cross_list(A, B):
     "Cross product of elements in A and elements in B."
@@ -56,15 +39,28 @@ def cross_columns(A, B):
         boxes.append(s+B)
     return boxes
 
-rows = ["Robins", "Ladybugs", "Bees", "Dolphins", "Lizards", "Mighty Monkeys", "Hoppin Roos", "Cool Cats", "Crazy Cats", "Top Dogs"]
-columns = ["Period 1", "Period 2", "Period 3", "Period 4", "Period 5", "Period 6"]
+rows = ["Robins",
+        "Ladybugs",
+        "Bees",
+        "Dolphins",
+        "Lizards",
+        "Mighty Monkeys",
+        "Hoppin Roos",
+        "Cool Cats",
+        "Crazy Cats",
+        "Top Dogs"]
+columns = ["Period 1",
+           "Period 2",
+           "Period 3",
+           "Period 4",
+           "Period 5",
+           "Period 6"]
 boxes = cross_list(rows, columns)
 
-activities = ["4-Way CTF", "$10 Ball", "Archery", "Arts & Crafts", "Basketball", "Bunk Time", "Camouflage", "Camp Games", "Capture the Flag", "Chaos Ball", "Dance", "Drama", "Football",
-              "Freeze Dance", "Game Time", "Gladiator", "Group Time", "Handball", "Hockey", "Human Bowling", "Karaoke", "Kickball", "Lanyards", "Music", "Parachute", "Playground",
-              "RMDC Ball", "Tag Games", "Scooters", "Storm the Castle", "Volleyball", "War o Worlds"]
-              
-weekly_activity = np.zeros((len(rows), len(activities)))
+#activities = ["$10 Ball", "Archery", "Arts & Crafts", "Basketball", "Bunk Time", "Camouflage", "Camp Games", "Capture the Flag", "Chaos Ball", "Dance", "Drama", "Football",
+#              "Freeze Dance", "Game Time", "Gladiator", "Group Time", "Handball", "Hockey", "Human Bowling", "Karaoke", "Kickball", "Lanyards", "Music", "Parachute", "Playground",
+#              "RMDC Ball", "Tag Games", "Scooters", "Storm the Castle", "Volleyball", "War o Worlds"]         
+#weekly_activity = np.zeros((len(rows), len(activities)))
 
 #group_activity = {"Robins": ["Chaos Ball", "Camouflage", "Bunk Time", "Arts & Crafts", "Archery", "Scooters", "Dance", "Game Time", "Human Bowling", "Karaoke", "Lanyards", "Music", "Parachute", "Playground", "Tag Games"]}
 
@@ -74,13 +70,40 @@ young_3_groups = ["Robins", "Ladybugs", "Bees", "Lizards", "Mighty Monkeys", "Ro
 old_groups = ["Dolphins", "Crazy Cats", "Top Dogs"]
 more_old_groups = ["Bees", "Dolphins", "Hoppin Roos", "Cool Cats", "Crazy Cats", "Top Dogs"]
 
-#location dict: location: (x, y, z, w) where x = False --> inside and x = True --> outside. y = the list of groups which can be at that location. z = the number of groups that can be at that location at any given time w = number of times a group can go to that location in a single day
-#
-location_dict = {"Playground": (True, young_2_groups, 2, 1), "Big Gym 1": (False, all_groups, 1, 2), "Big Gym 2": (False, all_groups, 1, 2),
-                 "Blacktop": (True, all_groups, 2, 2), "Big Field": (True, all_groups, 4, 2), "Water World": (True, all_groups, 10, 1),
-                 "Archery Range": (True, all_groups, 1, 1), "Cafeteria": (False, young_2_groups, 1, 1), "Arts and Crafts": (False, young_3_groups, 1, 1),
-                 "Ampitheatre": (False, all_groups, 1, 1), "Game Room": (False, all_groups, 1, 1), 'Bunk': (False, young_2_groups, len(rows), 1)}
+#location dict: location: (a, b, c, d, e) where 
+    #a = True --> outside;;;; false --> inside
+    #b = True --> active location ;;;;; false --> passive location
+    #c = the list of groups which can be at that location. 
+    #d = the number of groups that can be at that location at any given time 
+    #e = number of times a group can go to that location in a single day
 
+location_dict = {"Big Gym": (False, True, all_groups, 2, 3),
+                 "Blacktop/Playground": (True, True, all_groups, 3, 2),
+                 "Big Field": (True, True, all_groups, 4, 2),
+                 "Water World": (True, False, all_groups, 6, 1),
+                 "Archery Range": (True, False, all_groups, 1, 1),
+                 "Cafeteria": (False, False, young_2_groups, 1, 1),
+                 "Arts and Crafts": (False, False, young_3_groups, 1, 1),
+                 "Ampitheater": (False, False, all_groups, 1, 1),
+                 "Game Room": (False, False, all_groups, 1, 1),
+                 'Bunk': (False, True, young_2_groups, len(rows), 1)}
+                 
+#go through data and if there is some location which is not in the location dict, ask the user
+#if the location is inside or outside
+for i in range(len(data)):
+    if data[i] != '.' and data[i] not in location_dict.keys():
+        inside_outside = input("Is {} an OUTDOOR location? \n Type 'y' or 'yes' if the location is OUTSIDE \n Type 'n' or 'no' if the location is an INDOOR location: ".format(data[i]))
+        if inside_outside.lower() == 'y' or inside_outside.lower() == 'yes':
+            print("{} is outside.".format(data[i]))
+            inside_outside = True
+        else:
+            print("{} is inside.".format(data[i]))
+            inside_outside = False
+        temp_group = rows[i//len(columns)]
+        print("Only {} will go to {}.".format(temp_group, data[i]))
+        print("")
+        location_dict[data[i]] = (inside_outside, False, [temp_group], 1, 1)
+            
 
 row_units = [cross_rows(r, columns) for r in rows] #all of the different rows
 row_dict = dict()
@@ -107,7 +130,7 @@ for s in cross_list(rows, columns[:len(columns)-1]):
         if s in column:
             val = int(s[len(s) - 1:len(s)])
             inout_modified = [column[val]]
-            if str(6) not in s:
+            if str(6) not in s and str(2) not in s:
                 inout_dict[s] = inout_modified
 
 inout_units = list() #all of the different periods and periods +1 (for alternating in and outside)
@@ -117,11 +140,11 @@ for key, val in inout_dict.items():
 #[location, frequency]
 period_loc_frequency = dict()
 for loc in location_dict.keys():
-    period_loc_frequency[loc] = location_dict[loc][2]
+    period_loc_frequency[loc] = location_dict[loc][3]
     
 group_loc_frequency = dict()
 for loc in location_dict.keys():
-    group_loc_frequency[loc] = location_dict[loc][3]
+    group_loc_frequency[loc] = location_dict[loc][4]
             
 def grid_values(grid):
     """
@@ -133,13 +156,16 @@ def grid_values(grid):
             locations = location_dict.keys()
             eligible_locations = []
             for loc in locations:
-                for groups in location_dict[loc][1]:
+                for groups in location_dict[loc][2]:
                     if groups in boxes[c]:
                         eligible_locations.append(loc)
             values.append(eligible_locations)
         else:
             values.append([grid[c]])
-    return dict(zip(boxes, values))
+            
+    values = dict(zip(boxes, values))
+    
+    return values
     
 def column_eliminate(values):
     """
@@ -189,7 +215,7 @@ def row_inout_eliminate(values):
         if location in location_dict.keys():
             outside = location_dict[location][0]
  
-            if str(6) not in box: #only look at periods 1-5
+            if str(6) not in box and str(2) not in box: #only look at periods 1-5
             
                 following_activity = inout_dict[box][0]
                 if following_activity not in solved_values:
@@ -208,10 +234,22 @@ def row_inout_eliminate(values):
                     values[following_activity] = temp_list
 
     return values
+    
+def row_active_eliminate(values):
+    """
+    look through rows and ensure that each group gets at least 3 active locations
+    active locations = gym, big field, blacktop, playground.
+    """
+    
+    #count up how many active locations there are so far in each row = x
+    #if x + the number of non-solved spots = 3:
+        #eliminate non-active values from all non-solved spots
+    
+    return values
 
 def row_eliminate(values):
     """
-    for certain locations, ensure that a group only goes there once per day
+    for certain locations, ensure that a group only goes there a certain number of times (location_dict[4]) per day
     i.e. if the cool cats use the archery range in period #1, they do not need to visit the archery range again for the rest of the day
     """
     solved_values = [box for box in values.keys() if len(values[box]) == 1]
@@ -229,39 +267,6 @@ def row_eliminate(values):
 
     return values
 
-def row_naked_twins(values):
-    """
-    if 2 entries in a column both share the same two possibilities, remove those possibilities from all other entries in that column
-    """
-    dual_values = [box for box in values.keys() if len(values[box]) == 2]
-    
-    for box in dual_values:
-        for row_boxes in row_dict[box]:
-            if values[row_boxes] == values[box]:
-                loc_1 = values[box][0]
-                loc_2 = values[box][1]
-        
-        modified_row = list(row_dict[box])
-        modified_row.remove(row_boxes) #we do not want to remove the values from naked twins
-        
-        for modified in modified_row: #for all the OTHER columns:
-            if len(values[modified]) == 1: #we do not want to remove values from solved entries
-                modified_row.remove(modified)
-                         
-        for row_boxes_2 in modified_row:
-            try:
-                values[row_boxes_2].remove(loc_1)
-            except:
-                pass
-            try:
-                values[row_boxes_2].remove(loc_2)
-            except:
-                pass
-            
-
-    
-    return values
-
 def reduce_schedule(values):
     stalled = False
     while not stalled:
@@ -271,10 +276,9 @@ def reduce_schedule(values):
         #eliminate
         values = column_eliminate(values)
         values = row_inout_eliminate(values)
+        values = row_active_eliminate(values)
         values = row_eliminate(values)
         
-        #naked twins strategy
-        #values = row_naked_twins(values)
         
         #check how many boxes now have a determined value
         solved_values_after = len([box for box in values.keys() if len(values[box]) == 1])
